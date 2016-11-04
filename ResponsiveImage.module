@@ -70,17 +70,17 @@ class ResponsiveImage extends WireData implements Module {
     private function createSizeArray($options) {
         $return = $this->defaultSizeArray;
 
-        if ( isset($options['xs']) && is_numeric($options['xs']) ){   $return['xs'] = $options['xs'];   }
-        if ( isset($options['sm']) && is_numeric($options['sm']) ){   $return['sm'] = $options['sm'];   }
-        if ( isset($options['md']) && is_numeric($options['md']) ){   $return['md'] = $options['md'];   }
-        if ( isset($options['lg']) && is_numeric($options['lg']) ){   $return['lg'] = $options['lg'];   }
-        if ( isset($options['xl']) && is_numeric($options['xl']) ){   $return['xl'] = $options['xl'];   }
+        if ( isset($options['xs']) && is_numeric($options['xs']) ){   $return['xs'] = $options['xs'];          }
+        if ( isset($options['sm']) && is_numeric($options['sm']) ){   $return['sm'] = $options['sm'];          }
+        if ( isset($options['md']) && is_numeric($options['md']) ){   $return['md'] = $options['md'];          }
+        if ( isset($options['lg']) && is_numeric($options['lg']) ){   $return['lg'] = $options['lg'];          }
+        if ( isset($options['xl']) && is_numeric($options['xl']) ){   $return['xl'] = $options['xl'];          }
 
-        if ( isset($options['xs']) && is_object($options['xs']) ){   $return['xs'] = $options['xs']->width;   }
-        if ( isset($options['sm']) && is_object($options['sm']) ){   $return['sm'] = $options['sm']->width;   }
-        if ( isset($options['md']) && is_object($options['md']) ){   $return['md'] = $options['md']->width;   }
-        if ( isset($options['lg']) && is_object($options['lg']) ){   $return['lg'] = $options['lg']->width;   }
-        if ( isset($options['xl']) && is_object($options['xl']) ){   $return['xl'] = $options['xl']->width;   }
+        if ( isset($options['xs']) && is_object($options['xs']) ) {   $return['xs'] = $options['xs']->width;   }
+        if ( isset($options['sm']) && is_object($options['sm']) ) {   $return['sm'] = $options['sm']->width;   }
+        if ( isset($options['md']) && is_object($options['md']) ) {   $return['md'] = $options['md']->width;   }
+        if ( isset($options['lg']) && is_object($options['lg']) ) {   $return['lg'] = $options['lg']->width;   }
+        if ( isset($options['xl']) && is_object($options['xl']) ) {   $return['xl'] = $options['xl']->width;   }
 
         return $return;
     }
