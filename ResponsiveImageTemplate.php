@@ -1,0 +1,1 @@
+/home/diren/www/processwire/site/templates/ResponsiveImageTemplate.php

@@ -1,0 +1,116 @@
+<?php namespace ProcessWire;
+
+class ResponsiveImage extends WireData implements Module {
+
+	/**
+	 * getModuleInfo is a module required by all modules to tell ProcessWire about them
+	 *
+	 * @return array
+	 *
+	 */
+	public static function getModuleInfo() {
+
+		return array(
+
+			'title' => 'ResponsiveImage',
+			'version' => 100,
+			'summary' => 'Einfache Erstellung von Responsive-optimierten img-tags .',
+			//'href' => 'https://processwire.com',
+            'icon' => 'picture-o',
+
+            // Nur eine Instanz, da wir Hooks benutzen
+            'singular' => true,
+
+            // autoload=true: indicates the module should be started with ProcessWire.
+            // This is necessary for any modules that attach runtime hooks, otherwise those
+            // hooks won't get attached unless some other code calls the module on it's own.
+            // Note that autoload modules are almost always also 'singular' (seen above).
+            'autoload' => true,
+
+			);
+	}
+
+	/**
+	 * Initialize the module
+	 *
+	 * ProcessWire calls this when the module is loaded. For 'autoload' modules, this will be called
+	 * when ProcessWire's API is ready. As a result, this is a good place to attach hooks. 
+	 *
+	 */
+	public function init() {
+
+        $this->addHook('Page::noResponsiveImage', $this, 'noResponsiveImages');
+        $this->addHook('Pageimage::responsiveImage', $this, 'responsiveImage');
+        $this->addHook('Pageimage::responsiveBackground', $this, 'responsiveBackground');
+        $this->addHook('Page::getResponsiveCSS', $this, 'getResponsiveCSS');
+
+		// add a 'hello_world' property to every page that returns "Hello [user]"
+		// use "echo $page->hello_world;" in your template file to display output
+		//$this->addHookProperty('Pageimage::responsiveBackground', $this, 'responsiveBackground');
+	}
+
+
+    /**
+     * Example3 adds a 'hello' method (not property) to every page that simply returns "ResponsiveImage"
+     *
+     * @param HookEvent $event
+     *
+     */
+    public function responsiveImage($event) {
+        $image = $event->object;
+        $return = '<img src="'. $image->url. '" alt="'. $image->width ."x". $image->height . '"'.
+            'srcset="'. '' .'"'.
+            '>';
+
+        //$event->return = '** '. var_dump($event); die() . '**';
+        $event->return = $return;
+        //$event->return = '** '. $event->object->url . '**';
+    }
+
+    private function createSizeArray($options) {
+        $return = $this->defaultSizeArray;
+
+        if ( isset($options['xs']) && is_numeric($options['xs']) ){   $return['xs'] = $options['xs'];   }
+        if ( isset($options['sm']) && is_numeric($options['sm']) ){   $return['sm'] = $options['sm'];   }
+        if ( isset($options['md']) && is_numeric($options['md']) ){   $return['md'] = $options['md'];   }
+        if ( isset($options['lg']) && is_numeric($options['lg']) ){   $return['lg'] = $options['lg'];   }
+        if ( isset($options['xl']) && is_numeric($options['xl']) ){   $return['xl'] = $options['xl'];   }
+
+        if ( isset($options['xs']) && is_object($options['xs']) ){   $return['xs'] = $options['xs']->width;   }
+        if ( isset($options['sm']) && is_object($options['sm']) ){   $return['sm'] = $options['sm']->width;   }
+        if ( isset($options['md']) && is_object($options['md']) ){   $return['md'] = $options['md']->width;   }
+        if ( isset($options['lg']) && is_object($options['lg']) ){   $return['lg'] = $options['lg']->width;   }
+        if ( isset($options['xl']) && is_object($options['xl']) ){   $return['xl'] = $options['xl']->width;   }
+
+        return $return;
+    }
+
+    private function createURLArray($image, $sizes) {
+        return $image->size(600, 0, array('quality'=>1));
+    }
+
+    private function createSrcset($urls, $sizes){
+        foreach ($sizes as &$value ){
+            $value = $value . 'w';
+        }
+        return implode(",", $sizes);
+    }
+
+    private function createCombinedArray($urls, $sizes){
+        return $urls;
+    }
+
+    private function createAttributeString($attributes){
+        return $attributes;
+    }
+
+    private $defaultSizeArray = array(
+        'xs' => 768,
+        'sm' => 992,
+        'md' => 1200,
+        'lg' => 1600,
+        'xl' => 1920
+    );
+
+}
+
