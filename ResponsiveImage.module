@@ -58,12 +58,18 @@ class ResponsiveImage extends WireData implements Module {
      */
     public function responsiveImage($event) {
         $image = $event->object;
-        $return = '<img src="'. $image->url. '" alt="'. $image->width ."x". $image->height . '"'.
-            'srcset="'. '' .'"'.
+        $attributes = $this->createAttributeString($event['arguments'][1]);
+
+        $return =
+            '<img ' .
+            'src="'. $image->url .
+            '" alt="' . $image->width . "x" . $image->height . '"' .
+            'srcset="' . '' . '"' .
+            $attributes .
             '>';
 
-        //$event->return = '** '. var_dump($event); die() . '**';
-        $event->return = $return;
+        $event->return = '** '. var_dump($event); die() . '**';
+        //$event->return = $return;
         //$event->return = '** '. $event->object->url . '**';
     }
 
@@ -101,7 +107,7 @@ class ResponsiveImage extends WireData implements Module {
     }
 
     private function createAttributeString($attributes){
-        return $attributes;
+        return implode(",", $attributes);
     }
 
     private $defaultSizeArray = array(
