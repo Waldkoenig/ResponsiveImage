@@ -44,32 +44,30 @@ class ResponsiveImage extends WireData implements Module {
         $this->addHook('Pageimage::responsiveBackground', $this, 'responsiveBackground');
         $this->addHook('Page::getResponsiveCSS', $this, 'getResponsiveCSS');
 
-		// add a 'hello_world' property to every page that returns "Hello [user]"
-		// use "echo $page->hello_world;" in your template file to display output
-		//$this->addHookProperty('Pageimage::responsiveBackground', $this, 'responsiveBackground');
 	}
 
 
-    /**
-     * Example3 adds a 'hello' method (not property) to every page that simply returns "ResponsiveImage"
-     *
-     * @param HookEvent $event
-     *
-     */
-    public function responsiveImage($event) {
+   public function responsiveImage($event) {
+
+        if (!$this->useModule()) {
+            return "Modul deaktiviert"; //todo: standardbild ausliefern
+        }
         $image = $event->object;
         $attributes = $this->createAttributeString($event['arguments'][1]);
 
+       $srcset = $this->createSizeArray($event['arguments'][0]);
+       $srcset = $this->createSrcset($srcset);
+
         $return =
             '<img ' .
-            'src="'. $image->url .
-            '" alt="' . $image->width . "x" . $image->height . '"' .
-            'srcset="' . '' . '"' .
-            $attributes .
+            'src="'. $image->url . '" ' .
+            'alt="' . $image->width . "x" . $image->height . '"' .
+            'srcset="' . $srcset . '" ' .
+            $this->createAttributeString($attributes).
             '>';
 
-        $event->return = '** '. var_dump($event); die() . '**';
-        //$event->return = $return;
+        //$event->return = '** '. var_dump($event); die() . '**';
+        $event->return = $return;
         //$event->return = '** '. $event->object->url . '**';
     }
 
@@ -82,32 +80,29 @@ class ResponsiveImage extends WireData implements Module {
         if ( isset($options['lg']) && is_numeric($options['lg']) ){   $return['lg'] = $options['lg'];          }
         if ( isset($options['xl']) && is_numeric($options['xl']) ){   $return['xl'] = $options['xl'];          }
 
-        if ( isset($options['xs']) && is_object($options['xs']) ) {   $return['xs'] = $options['xs']->width;   }
-        if ( isset($options['sm']) && is_object($options['sm']) ) {   $return['sm'] = $options['sm']->width;   }
-        if ( isset($options['md']) && is_object($options['md']) ) {   $return['md'] = $options['md']->width;   }
-        if ( isset($options['lg']) && is_object($options['lg']) ) {   $return['lg'] = $options['lg']->width;   }
-        if ( isset($options['xl']) && is_object($options['xl']) ) {   $return['xl'] = $options['xl']->width;   }
+        if ( isset($options['xs']) && $options['xs'] == false ) {   unset($return['xs']);   }
+        if ( isset($options['sm']) && $options['xs'] == false ) {   unset($return['sm']);   }
+        if ( isset($options['md']) && $options['xs'] == false ) {   unset($return['md']);   }
+        if ( isset($options['lg']) && $options['xs'] == false ) {   unset($return['lg']);   }
+        if ( isset($options['xl']) && $options['xs'] == false ) {   unset($return['xl']);   }
+
+        if ( isset($options['xs']) && is_object($options['xs']) ) {   $return['xs'] = $options['xs']->size($this->defaultSizeArray['xs'], 0, array('quality'=>15))->url .' '. $options['xs']->width . "w";   }
+        if ( isset($options['sm']) && is_object($options['sm']) ) {   $return['sm'] = $options['sm']->size($this->defaultSizeArray['sm'], 0, array('quality'=>15))->url .' '. $options['sm']->width . "w";   }
+        if ( isset($options['md']) && is_object($options['md']) ) {   $return['md'] = $options['md']->size($this->defaultSizeArray['md'], 0, array('quality'=>15))->url .' '. $options['md']->width . "w";   }
+        if ( isset($options['lg']) && is_object($options['lg']) ) {   $return['lg'] = $options['lg']->size($this->defaultSizeArray['lg'], 0, array('quality'=>15))->url .' '. $options['lg']->width . "w";   }
+        if ( isset($options['xl']) && is_object($options['xl']) ) {   $return['xl'] = $options['xl']->size($this->defaultSizeArray['xl'], 0, array('quality'=>15))->url .' '. $options['xl']->width . "w";   }
 
         return $return;
     }
 
-    private function createURLArray($image, $sizes) {
-        return $image->size(600, 0, array('quality'=>1));
-    }
+    private function createSrcset($sizes){
+        //$return = '** '. var_dump($sizes[0]); die() . '**';
 
-    private function createSrcset($urls, $sizes){
-        foreach ($sizes as &$value ){
-            $value = $value . 'w';
-        }
-        return implode(",", $sizes);
-    }
-
-    private function createCombinedArray($urls, $sizes){
-        return $urls;
+        return implode(", ", $sizes);
     }
 
     private function createAttributeString($attributes){
-        return implode(",", $attributes);
+        return implode(" ", $attributes);
     }
 
     private $defaultSizeArray = array(
@@ -117,6 +112,10 @@ class ResponsiveImage extends WireData implements Module {
         'lg' => 1600,
         'xl' => 1920
     );
+
+    private function useModule(){
+        return true;
+    }
 
 }
 
