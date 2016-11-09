@@ -71,24 +71,32 @@ class ResponsiveImage extends WireData implements Module {
         //$event->return = '** '. $event->object->url . '**';
     }
 
-    private function createSizeArray($options) {
+    public function responsiveBackground($event){
+        $return = '';
+        $event->return = $return;
+    }
+
+    private function createSizeArray($options){
+
         $return = $this->defaultSizeArray;
 
-        foreach ( $this->defaultSizeArray as $key=>$value ){
-            if ( isset($options[$key]) && is_numeric($options[$key]) ) {
-                $return[$key] = $options['lg']->size( $value, 0, array('quality' => 15) )->url . ' ' . $return[$key] . "w";
-            } elseif ( isset($options[$key]) && $options[$key] == false ) {
+        foreach ($return as $key => $value) {
+            if (isset($options[$key]) && is_numeric($options[$key])) {
+                $return[$key] = $value;
+            } elseif (isset($options[$key]) && $options[$key] == false) {
                 unset($return[$key]);
-            } elseif ( isset($options[$key]) && is_object($options[$key]) ) {
-                $return[$key] = $options[$key]->size( $value, 0, array('quality' => 15) )->url . ' ' . $options[$key]->width . "w";
+            } elseif (!isset($options[$key]) ) {
+                unset($return[$key]);
+            } elseif (isset($options[$key]) && is_object($options[$key])) {
+                $return[$key] = $options[$key]->width;
             }
         }
-
+        var_dump($return);
         return $return;
     }
 
     private function createSrcset($sizes){
-         return implode(", ", $sizes);
+        return implode(", ", $sizes);
     }
 
     private function createAttributeString($attributes){
@@ -96,11 +104,11 @@ class ResponsiveImage extends WireData implements Module {
     }
 
     private $defaultSizeArray = array(
-        'xs' => 768,
-        'sm' => 992,
-        'md' => 1200,
+        'xl' => 1920,
         'lg' => 1600,
-        'xl' => 1920
+        'md' => 1200,
+        'sm' => 992,
+        'xs' => 768
     );
 
     private function useModule(){
