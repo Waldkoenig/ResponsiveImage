@@ -74,31 +74,21 @@ class ResponsiveImage extends WireData implements Module {
     private function createSizeArray($options) {
         $return = $this->defaultSizeArray;
 
-        if ( isset($options['xs']) && is_numeric($options['xs']) ){   $return['xs'] = $options['xs'];          }
-        if ( isset($options['sm']) && is_numeric($options['sm']) ){   $return['sm'] = $options['sm'];          }
-        if ( isset($options['md']) && is_numeric($options['md']) ){   $return['md'] = $options['md'];          }
-        if ( isset($options['lg']) && is_numeric($options['lg']) ){   $return['lg'] = $options['lg'];          }
-        if ( isset($options['xl']) && is_numeric($options['xl']) ){   $return['xl'] = $options['xl'];          }
-
-        if ( isset($options['xs']) && $options['xs'] == false ) {   unset($return['xs']);   }
-        if ( isset($options['sm']) && $options['xs'] == false ) {   unset($return['sm']);   }
-        if ( isset($options['md']) && $options['xs'] == false ) {   unset($return['md']);   }
-        if ( isset($options['lg']) && $options['xs'] == false ) {   unset($return['lg']);   }
-        if ( isset($options['xl']) && $options['xs'] == false ) {   unset($return['xl']);   }
-
-        if ( isset($options['xs']) && is_object($options['xs']) ) {   $return['xs'] = $options['xs']->size($this->defaultSizeArray['xs'], 0, array('quality'=>15))->url .' '. $options['xs']->width . "w";   }
-        if ( isset($options['sm']) && is_object($options['sm']) ) {   $return['sm'] = $options['sm']->size($this->defaultSizeArray['sm'], 0, array('quality'=>15))->url .' '. $options['sm']->width . "w";   }
-        if ( isset($options['md']) && is_object($options['md']) ) {   $return['md'] = $options['md']->size($this->defaultSizeArray['md'], 0, array('quality'=>15))->url .' '. $options['md']->width . "w";   }
-        if ( isset($options['lg']) && is_object($options['lg']) ) {   $return['lg'] = $options['lg']->size($this->defaultSizeArray['lg'], 0, array('quality'=>15))->url .' '. $options['lg']->width . "w";   }
-        if ( isset($options['xl']) && is_object($options['xl']) ) {   $return['xl'] = $options['xl']->size($this->defaultSizeArray['xl'], 0, array('quality'=>15))->url .' '. $options['xl']->width . "w";   }
+        foreach ( $this->defaultSizeArray as $key=>$value ){
+            if ( isset($options[$key]) && is_numeric($options[$key]) ) {
+                $return[$key] = $options['lg']->size( $value, 0, array('quality' => 15) )->url . ' ' . $return[$key] . "w";
+            } elseif ( isset($options[$key]) && $options[$key] == false ) {
+                unset($return[$key]);
+            } elseif ( isset($options[$key]) && is_object($options[$key]) ) {
+                $return[$key] = $options[$key]->size( $value, 0, array('quality' => 15) )->url . ' ' . $options[$key]->width . "w";
+            }
+        }
 
         return $return;
     }
 
     private function createSrcset($sizes){
-        //$return = '** '. var_dump($sizes[0]); die() . '**';
-
-        return implode(", ", $sizes);
+         return implode(", ", $sizes);
     }
 
     private function createAttributeString($attributes){
