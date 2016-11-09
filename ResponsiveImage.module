@@ -55,7 +55,7 @@ class ResponsiveImage extends WireData implements Module {
         $image = $event->object;
         $attributes = $this->createAttributeString($event['arguments'][1]);
 
-       $srcset = $this->createSizeArray($event['arguments'][0]);
+       $srcset = $this->createSizeArray($image, $event['arguments'][0]);
        $srcset = $this->createSrcset($srcset);
 
         $return =
@@ -76,7 +76,7 @@ class ResponsiveImage extends WireData implements Module {
         $event->return = $return;
     }
 
-    private function createSizeArray($options){
+    private function createSizeArray($image, $options){
 
         $return = $this->defaultSizeArray;
 
@@ -111,9 +111,19 @@ class ResponsiveImage extends WireData implements Module {
         'xs' => 768
     );
 
-    private function useModule(){
-        return true;
+    public function disable(){
+        $this->useModule = false;
     }
+
+    public function enable(){
+        $this->useModule = true;
+    }
+
+    public function isModuleEnabled(){
+        return $this->useModule;
+    }
+
+    private $useModule = true;
 
 }
 
