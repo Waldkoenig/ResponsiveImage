@@ -1,7 +1,6 @@
 <?php namespace ProcessWire;
 
 class ResponsiveImage extends WireData implements Module {
-
 	/**
 	 * getModuleInfo is a module required by all modules to tell ProcessWire about them
 	 *
@@ -49,7 +48,7 @@ class ResponsiveImage extends WireData implements Module {
 
    public function responsiveImage($event) {
 
-        if (!$this->useModule()) {
+        if (!$this->useModule) {
             return "Modul deaktiviert"; //todo: standardbild ausliefern
         }
         $image = $event->object;
@@ -72,6 +71,11 @@ class ResponsiveImage extends WireData implements Module {
     }
 
     public function responsiveBackground($event){
+        $return = '';
+        $event->return = $return;
+    }
+
+    public function getResponsiveCSS($event){
         $return = '';
         $event->return = $return;
     }
@@ -103,6 +107,7 @@ class ResponsiveImage extends WireData implements Module {
         return implode(" ", $attributes);
     }
 
+    private $useModule = true;
     private $defaultSizeArray = array(
         'xl' => 1920,
         'lg' => 1600,
@@ -122,8 +127,6 @@ class ResponsiveImage extends WireData implements Module {
     public function isModuleEnabled(){
         return $this->useModule;
     }
-
-    private $useModule = true;
 
 }
 
