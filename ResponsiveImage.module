@@ -83,6 +83,7 @@ class ResponsiveImage extends WireData implements Module {
     private function createSizeArray($image, $options){
 
         $return = $this->defaultSizeArray;
+        $biggestSize = $image->width;
 
         foreach ($return as $key => $value) {
             if (isset($options[$key]) && is_numeric($options[$key])) {
@@ -95,12 +96,17 @@ class ResponsiveImage extends WireData implements Module {
                 $return[$key] = $options[$key]->width;
             }
         }
+
         var_dump($return);
         return $return;
     }
 
-    private function createSrcset($sizes){
-        return implode(", ", $sizes);
+    private function createSrcset($imageURLs, $sizes){
+        return $imageURLs['xs']. ' ' .$sizes['xs'] . 'w, ' .
+               $imageURLs['sm']. ' ' .$sizes['sm'] . 'w, ' .
+               $imageURLs['md']. ' ' .$sizes['md'] . 'w, ' .
+               $imageURLs['lg']. ' ' .$sizes['lg'] . 'w, ' .
+               $imageURLs['xl']. ' ' .$sizes['xl'] . 'w';
     }
 
     private function createAttributeString($attributes){
