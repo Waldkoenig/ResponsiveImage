@@ -1,12 +1,6 @@
 <?php namespace ProcessWire;
 
 class ResponsiveImage extends WireData implements Module {
-	/**
-	 * getModuleInfo is a module required by all modules to tell ProcessWire about them
-	 *
-	 * @return array
-	 *
-	 */
 	public static function getModuleInfo() {
 
 		return array(
@@ -21,21 +15,11 @@ class ResponsiveImage extends WireData implements Module {
             'singular' => true,
 
             // autoload=true: indicates the module should be started with ProcessWire.
-            // This is necessary for any modules that attach runtime hooks, otherwise those
-            // hooks won't get attached unless some other code calls the module on it's own.
-            // Note that autoload modules are almost always also 'singular' (seen above).
             'autoload' => true,
 
 			);
 	}
 
-	/**
-	 * Initialize the module
-	 *
-	 * ProcessWire calls this when the module is loaded. For 'autoload' modules, this will be called
-	 * when ProcessWire's API is ready. As a result, this is a good place to attach hooks. 
-	 *
-	 */
 	public function init() {
 
         $this->addHook('Page::noResponsiveImage', $this, 'noResponsiveImages');
@@ -54,18 +38,22 @@ class ResponsiveImage extends WireData implements Module {
         $image = $event->object;
         $attributes = $this->createAttributeString($event['arguments'][1]);
 
-       $srcset = $this->createSizeArray($image, $event['arguments'][0]);
-       $srcset = $this->createSrcset($srcset);
 
-        $return =
-            '<img ' .
-            'src="'. $image->url . '" ' .
-            'alt="' . $image->width . "x" . $image->height . '"' .
-            'srcset="' . $srcset . '" ' .
-            $this->createAttributeString($attributes).
-            '>';
+       if ($this->isModuleEnabled()) {
+           $srcset = $this->createSrcset($image, $event['arguments'][0]);
+           $return =
+                '<img ' .
+                'src="'. $image->url . '" ' .
+                'alt="' . $image->width . "x" . $image->height . '"' .
+                'srcset="' . $srcset . '" ' .
+                $this->createAttributeString($attributes).
+                '>';
+        } else {
+            $return = '<img src="'. $image->url . '" alt="' . $image->width . "x" . $image->height . '"' . $this->createAttributeString($attributes). '>';
+        }
 
-        //$event->return = '** '. var_dump($event); die() . '**';
+
+       //$event->return = '** '. var_dump($event); die() . '**';
         $event->return = $return;
         //$event->return = '** '. $event->object->url . '**';
     }
@@ -80,33 +68,38 @@ class ResponsiveImage extends WireData implements Module {
         $event->return = $return;
     }
 
-    private function createSizeArray($image, $options){
+    private function createSrcset($image, $options){
 
         $return = $this->defaultSizeArray;
-        $biggestSize = $image->width;
+        $baseImage = $image;
+        $resizeOptions = array('quality'=>$this->imageQuality);
 
         foreach ($return as $key => $value) {
             if (isset($options[$key]) && is_numeric($options[$key])) {
-                $return[$key] = $value;
+                if ($options[$value]<$baseImage) {
+                    $i = $image->size($options[$key], 0, $resizeOptions);
+                    $return[$key] = $i->url . ' ' . $i->width . 'w';
+                } else {
+                    $return[$key] = $baseImage->url . ' ' . $baseImage->width . 'w';
+                }
+
             } elseif (isset($options[$key]) && $options[$key] == false) {
-                unset($return[$key]);
+                $i = $image->size($options[$key], 0, $resizeOptions);
+                $return[$key] = $i->url . ' ' . $i->width . 'w';
+
             } elseif (!isset($options[$key]) ) {
-                unset($return[$key]);
+                $i = $image->size($options[$key], 0, $resizeOptions);
+                $return[$key] = $i->url . ' ' . $i->width . 'w';
+
             } elseif (isset($options[$key]) && is_object($options[$key])) {
-                $return[$key] = $options[$key]->width;
+                $baseImage = $options[$key];
+                $return[$key] = $baseImage->url . ' ' . $baseImage->width . 'w';
+
             }
         }
 
-        var_dump($return);
-        return $return;
-    }
-
-    private function createSrcset($imageURLs, $sizes){
-        return $imageURLs['xs']. ' ' .$sizes['xs'] . 'w, ' .
-               $imageURLs['sm']. ' ' .$sizes['sm'] . 'w, ' .
-               $imageURLs['md']. ' ' .$sizes['md'] . 'w, ' .
-               $imageURLs['lg']. ' ' .$sizes['lg'] . 'w, ' .
-               $imageURLs['xl']. ' ' .$sizes['xl'] . 'w';
+        //var_dump($return);
+        return implode(', ', $return);
     }
 
     private function createAttributeString($attributes){
@@ -114,6 +107,7 @@ class ResponsiveImage extends WireData implements Module {
     }
 
     private $useModule = true;
+    private $imageQuality = 1;
     private $defaultSizeArray = array(
         'xl' => 1920,
         'lg' => 1600,
