@@ -32,12 +32,8 @@ class ResponsiveImage extends WireData implements Module {
 
    public function responsiveImage($event) {
 
-        if (!$this->useModule) {
-            return "Modul deaktiviert"; //todo: standardbild ausliefern
-        }
         $image = $event->object;
         $attributes = $this->createAttributeString($event['arguments'][1]);
-
 
        if ($this->isModuleEnabled()) {
            $srcset = $this->createSrcset($image, $event['arguments'][0]);
@@ -106,9 +102,9 @@ class ResponsiveImage extends WireData implements Module {
         return implode(" ", $attributes);
     }
 
-    private $useModule = true;
-    private $imageQuality = 1;
-    private $defaultSizeArray = array(
+    private static $useModule = true;
+    private static $imageQuality = 1;
+    private static $defaultSizeArray = array(
         'xl' => 1920,
         'lg' => 1600,
         'md' => 1200,
@@ -116,16 +112,16 @@ class ResponsiveImage extends WireData implements Module {
         'xs' => 768
     );
 
-    public function disable(){
-        $this->useModule = false;
+    public static function disable(){
+        self::$useModule = false;
     }
 
-    public function enable(){
-        $this->useModule = true;
+    public static function enable(){
+        self::$useModule = true;
     }
 
-    public function isModuleEnabled(){
-        return $this->useModule;
+    public static function isModuleEnabled(){
+        return self::$useModule;
     }
 
 }
