@@ -1,14 +1,14 @@
 <?php namespace ProcessWire;
 
 class  ResponsiveImage extends WireData implements Module {
-	public static function getModuleInfo() {
+    public static function getModuleInfo() {
 
-		return array(
+        return array(
 
-			'title' => 'ResponsiveImage',
-			'version' => 100,
-			'summary' => 'Einfache Erstellung von Responsive-optimierten img-tags .',
-			//'href' => 'https://processwire.com',
+            'title' => 'ResponsiveImage',
+            'version' => 100,
+            'summary' => 'Einfache Erstellung von Responsive-optimierten img-tags .',
+            //'href' => 'https://processwire.com',
             'icon' => 'picture-o',
 
             // Nur eine Instanz, da wir Hooks benutzen
@@ -17,12 +17,13 @@ class  ResponsiveImage extends WireData implements Module {
             // autoload=true: indicates the module should be started with ProcessWire.
             'autoload' => true,
 
-			);
-	}
+        );
+    }
 
     private $backgroundImageCounter = 0;
+    private $backgroundImages = array();
     private static $useModule = true;
-    private static $imageQuality = 1;
+    private static $resizeQuality = 1;
     private static $defaultSizeArray = array(
         'xl' => 1920,
         'lg' => 1600,
@@ -35,19 +36,18 @@ class  ResponsiveImage extends WireData implements Module {
 
         $this->addHook('Pageimage::responsiveImage', $this, 'responsiveImage');
         $this->addHook('Pageimage::responsiveBackground', $this, 'responsiveBackground');
-        $this->addHook('Page::responsiveBackground', $this, 'responsiveBackground');
         $this->addHook('Page::getResponsiveCSS', $this, 'getResponsiveCSS');
 
-	}
+    }
 
 
-   public function responsiveImage($event) {
+    public function responsiveImage($event) {
         $image = $event->object;
         $attributes = $this->createAttributeString($event['arguments'][1]);
 
-       if ($this->isModuleEnabled()) {
-           $srcset = $this->createSrcset($image, $event['arguments'][0]);
-           $return =
+        if ($this->isModuleEnabled()) {
+            $srcset = $this->createSrcset($image, $event['arguments'][0]);
+            $return =
                 '<img ' .
                 'src="'. $image->url . '" ' .
                 'alt="' . $image->width . "x" . $image->height . '"' .
@@ -62,18 +62,32 @@ class  ResponsiveImage extends WireData implements Module {
     }
 
     public function responsiveBackground($event){
+        $return =
+            '<style="'.
+            'background-image: '.
+            $event->object->image->url.
+            '">';
+
         $this->backgroundImageCounter++;
+
+        $event->return = $return;
     }
 
     public function getResponsiveCSS($event){
-        $return = $this->backgroundImageCounter;
+        $return = '';
+
+        foreach ($this->backgroundImages as $image){
+            $return .= $image;
+        }
+
+        $return .= ' '.$this->backgroundImageCounter;
         $event->return = $return;
     }
 
     private function createSrcset($image, $options){
         $return = self::$defaultSizeArray;
         $baseImage = $image;
-        $resizeOptions = array('quality'=>self::$imageQuality);
+        $resizeOptions = array('quality'=>self::$resizeQuality);
 
         foreach ($return as $key => $value) {
             if (isset($options[$key]) && is_numeric($options[$key])) {
