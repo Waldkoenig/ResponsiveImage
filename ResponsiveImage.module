@@ -43,30 +43,33 @@ class  ResponsiveImage extends WireData implements Module {
 
     public function responsiveImage($event) {
         $image = $event->object;
+        $options = $event['arguments'][1];
         $attributes = $this->createAttributeString($event['arguments'][1]);
 
         if ($this->isModuleEnabled()) {
-            $srcset = $this->createSrcset($image, $event['arguments'][0]);
+            $srcset = $this->createSrcset($image, $options);
             $return =
                 '<img ' .
                 'src="'. $image->url . '" ' .
                 'alt="' . $image->width . "x" . $image->height . '"' .
                 'srcset="' . $srcset . '" ' .
-                $this->createAttributeString($attributes).
+                $attributes.
                 '>';
         } else {
-            $return = '<img src="'. $image->url . '" alt="' . $image->width . "x" . $image->height . '"' . $this->createAttributeString($attributes). '>';
+            $return = '<img src="'. $image->url . '" alt="' . $image->width . "x" . $image->height . '"' . $attributes. '>';
         }
 
         $event->return = $return;
     }
 
     public function responsiveBackground($event){
-        $return =
-            '<style="'.
-            'background-image: '.
-            $event->object->image->url.
-            '">';
+        $image = $event->object;
+        $content = $event['arguments'][0][0];
+
+        $return = '<div class="background-image-'. $this->backgroundImageCounter.'">'.
+            $content.
+            '</div>';
+        $this->backgroundImages[$this->backgroundImageCounter] = $image;
 
         $this->backgroundImageCounter++;
 
@@ -76,10 +79,17 @@ class  ResponsiveImage extends WireData implements Module {
     public function getResponsiveCSS($event){
         $return = '';
 
-        foreach ($this->backgroundImages as $image){
-            $return .= $image;
+        if ($this->backgroundImageCounter > 0 ) {
+            $return .= ' <style type="text/css">';
+            foreach ($this->backgroundImages as $key => $image) {
+                $return .= '
+                    div.background-image-' . $key . ' {
+                        background-image: url(' . $image->url . ');
+                    }
+             ';
+            }
+            $return .= '</style>';
         }
-
         $return .= ' '.$this->backgroundImageCounter;
         $event->return = $return;
     }
