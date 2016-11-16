@@ -85,6 +85,7 @@ class  ResponsiveImage extends WireData implements Module {
                 $return .= '
                     div.background-image-' . $key . ' {
                         background-image: url(' . $image->url . ');
+                        
                     }
              ';
             }
@@ -98,6 +99,7 @@ class  ResponsiveImage extends WireData implements Module {
         $return = self::$defaultSizeArray;
         $baseImage = $image;
         $resizeOptions = array('quality'=>self::$resizeQuality);
+        $noImage = $false;
 
         foreach ($return as $key => $value) {
             if (isset($options[$key]) && is_numeric($options[$key])) {
@@ -111,6 +113,7 @@ class  ResponsiveImage extends WireData implements Module {
             } elseif (isset($options[$key]) && $options[$key] == false) {
                 $i = $image->size($options[$key], 0, $resizeOptions);
                 $return[$key] = $i->url . ' ' . $i->width . 'w';
+
 
             } elseif (!isset($options[$key]) ) {
                 $i = $image->size($options[$key], 0, $resizeOptions);
