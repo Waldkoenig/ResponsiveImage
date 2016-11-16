@@ -43,7 +43,7 @@ class  ResponsiveImage extends WireData implements Module {
 
     public function responsiveImage($event) {
         $image = $event->object;
-        $options = $event['arguments'][1];
+        $options = $event['arguments'][0];
         $attributes = $this->createAttributeString($event['arguments'][1]);
 
         if ($this->isModuleEnabled()) {
@@ -51,12 +51,11 @@ class  ResponsiveImage extends WireData implements Module {
             $return =
                 '<img ' .
                 'src="'. $image->url . '" ' .
-                'alt="' . $image->width . "x" . $image->height . '"' .
                 'srcset="' . $srcset . '" ' .
                 $attributes.
                 '>';
         } else {
-            $return = '<img src="'. $image->url . '" alt="' . $image->width . "x" . $image->height . '"' . $attributes. '>';
+            $return = '<img src="'. $image->url . '" ' . $attributes. '>';
         }
 
         $event->return = $return;
@@ -99,34 +98,26 @@ class  ResponsiveImage extends WireData implements Module {
         $return = self::$defaultSizeArray;
         $baseImage = $image;
         $resizeOptions = array('quality'=>self::$resizeQuality);
-        $noImage = $false;
 
+        var_dump($options);
         foreach ($return as $key => $value) {
-            if (isset($options[$key]) && is_numeric($options[$key])) {
+            if ( isset($options[$key]) && is_numeric($options[$key])) {
                 if ($options[$value]<$baseImage) {
                     $i = $image->size($options[$key], 0, $resizeOptions);
                     $return[$key] = $i->url . ' ' . $i->width . 'w';
                 } else {
                     $return[$key] = $baseImage->url . ' ' . $baseImage->width . 'w';
                 }
-
             } elseif (isset($options[$key]) && $options[$key] == false) {
+                //todo: bilder komplett ausblenden bei false
+            } elseif ( !isset($options[$key]) ) {
                 $i = $image->size($options[$key], 0, $resizeOptions);
                 $return[$key] = $i->url . ' ' . $i->width . 'w';
-
-
-            } elseif (!isset($options[$key]) ) {
-                $i = $image->size($options[$key], 0, $resizeOptions);
-                $return[$key] = $i->url . ' ' . $i->width . 'w';
-
-            } elseif (isset($options[$key]) && is_object($options[$key])) {
+            } elseif ( isset($options[$key]) && is_object($options[$key])) {
                 $baseImage = $options[$key];
                 $return[$key] = $baseImage->url . ' ' . $baseImage->width . 'w';
-
             }
         }
-
-        //var_dump($return);
         return implode(', ', $return);
     }
 
