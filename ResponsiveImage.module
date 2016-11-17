@@ -44,6 +44,7 @@ class  ResponsiveImage extends WireData implements Module {
     public function responsiveImage($event) {
         $image = $event->object;
         $options = $event['arguments'][0];
+
         $attributes = $this->createAttributeString($event['arguments'][1]);
 
         if ($this->isModuleEnabled()) {
@@ -63,13 +64,17 @@ class  ResponsiveImage extends WireData implements Module {
 
     public function responsiveBackground($event){
         $image = $event->object;
-        $content = $event['arguments'][0][0];
+        $content = $event['arguments'][0];
+        $options = $event['arguments'][1];
 
         $return = '<div class="background-image-'. $this->backgroundImageCounter.'">'.
-            $content.
-            '</div>';
-        $this->backgroundImages[$this->backgroundImageCounter] = $image;
+                      $content.
+                  '</div>';
 
+        $this->backgroundImages[$this->backgroundImageCounter] = $image;
+        $this->backgroundImages[$this->backgroundImageCounter]['options'] = $options;
+        $this->backgroundImages[$this->backgroundImageCounter]['keyCSS'] = $this->backgroundImageCounter;
+        var_dump($this->backgroundImages[$this->backgroundImageCounter]);
         $this->backgroundImageCounter++;
 
         $event->return = $return;
@@ -79,18 +84,13 @@ class  ResponsiveImage extends WireData implements Module {
         $return = '';
 
         if ($this->backgroundImageCounter > 0 ) {
-            $return .= ' <style type="text/css">';
+            $return .= "\n".'<style type="text/css">'."\n";
             foreach ($this->backgroundImages as $key => $image) {
-                $return .= '
-                    div.background-image-' . $key . ' {
-                        background-image: url(' . $image->url . ');
-                        
-                    }
-             ';
+                $return .= 'div.background-image-'. $key .' { background-image: url('. $image->url .'); }'."\n";
+                $return .= $this->createMediaQueries($image);
             }
-            $return .= '</style>';
+            $return .= "\n".'</style>'."\n";
         }
-        $return .= ' '.$this->backgroundImageCounter;
         $event->return = $return;
     }
 
@@ -99,7 +99,6 @@ class  ResponsiveImage extends WireData implements Module {
         $baseImage = $image;
         $resizeOptions = array('quality'=>self::$resizeQuality);
 
-        var_dump($options);
         foreach ($return as $key => $value) {
             if ( isset($options[$key]) && is_numeric($options[$key])) {
                 if ($options[$value]<$baseImage) {
@@ -119,6 +118,48 @@ class  ResponsiveImage extends WireData implements Module {
             }
         }
         return implode(', ', $return);
+    }
+
+    private function createMediaQueries($image){
+        $return = self::$defaultSizeArray;
+        $baseImage = $image;
+        $resizeOptions = array('quality'=>self::$resizeQuality);
+        $options = $image['options'];
+        $keyCSS = $image['keyCSS'];
+
+        foreach ($return as $key => $value) {
+            if ( isset($options[$key]) && is_numeric($options[$key])) {
+                if ($options[$value]<$baseImage) {
+                    $i = $image->size($options[$key], 0, $resizeOptions);
+                    //$return[$key] = $i->url . ' ' . $i->width . 'w';
+                    $return[$key] = $this->createMediaQueryString($keyCSS, $i->width, $i->url);
+                } else {
+                    //$return[$key] = $baseImage->url . ' ' . $baseImage->width . 'w';
+                    $return[$key] = $this->createMediaQueryString($keyCSS, $baseImage->width, $baseImage->url);
+                }
+            } elseif (isset($options[$key]) && $options[$key] == false) {
+                //todo: bilder komplett ausblenden bei false
+                $return[$key] = "\n".'@media (max-width: '. $return[$key] .'px) {'. "\n".
+                    '  div.background-image-'. $keyCSS .' { display: none; }'."\n".
+                    '}' . "\n" .
+                    '@media' . "\n";
+
+            } elseif ( !isset($options[$key]) ) {
+                $i = $image->size($options[$key], 0, $resizeOptions);
+                $return[$key] = $this->createMediaQueryString($keyCSS, $i->width, $i->url);
+            } elseif ( isset($options[$key]) && is_object($options[$key])) {
+                $baseImage = $options[$key];
+                $return[$key] = $this->createMediaQueryString($keyCSS, $baseImage->width, $baseImage->url);
+            }
+        }
+        return implode("\n", $return);
+    }
+
+    private function createMediaQueryString($keyCSS, $width, $url){
+        return "\n".'@media (max-width: '. $width .'px) {'. "\n".
+        '  div.background-image-'. $keyCSS .' { background-image: url('. $url .'); }'."\n".
+        '}' . "\n" .
+        '@media' . "\n";
     }
 
     private function createAttributeString($attributes){
