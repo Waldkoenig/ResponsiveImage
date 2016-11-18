@@ -1,29 +1,25 @@
 <?php namespace ProcessWire;
-
-class  ResponsiveImage extends WireData implements Module {
+class ResponsiveImage extends WireData implements Module {
     public static function getModuleInfo() {
-
         return array(
-
             'title' => 'ResponsiveImage',
             'version' => 100,
-            'summary' => 'Einfache Erstellung von Responsive-optimierten img-tags .',
+            'summary' => 'Einfache Erstellung von Responsive-optimiertem HTML-Code für Bilder und Hintergrundbilder',
             //'href' => 'https://processwire.com',
             'icon' => 'picture-o',
 
             // Nur eine Instanz, da wir Hooks benutzen
             'singular' => true,
 
-            // autoload=true: indicates the module should be started with ProcessWire.
+            // Modul soll direkt mit Processwire gestartet werden
             'autoload' => true,
-
         );
     }
 
     private $backgroundImageCounter = 0;
-    private $backgroundImages = array();
+    private $backgroundImageArray = array();
     private static $useModule = true;
-    private static $resizeQuality = 1;
+    private static $defaultResizeQuality = 90;
     private static $defaultSizeArray = array(
         'xl' => 1920,
         'lg' => 1600,
@@ -32,20 +28,33 @@ class  ResponsiveImage extends WireData implements Module {
         'xs' => 768
     );
 
+    /**
+     * Initialisierungsteil
+     *
+     * Hier werden den Seiten-Elementen (Page) und Bildern (Pageimage) neue Funktionen verliehen und definiert.
+     */
     public function init() {
-
         $this->addHook('Pageimage::responsiveImage', $this, 'responsiveImage');
         $this->addHook('Pageimage::responsiveBackground', $this, 'responsiveBackground');
         $this->addHook('Page::getResponsiveCSS', $this, 'getResponsiveCSS');
-
+        //todo: Hooks erklären
     }
 
-
+    /**
+     * Neue Funktion for Bilder
+     *
+     * Diese Funktion gibt angepassten HTML-Code für Bilder zurück. Falls das Modul mit der Funktion disable()
+     * temporär deaktiviert wurde, wird Standard-Code zurückgegeben.
+     *
+     * @param $event
+     */
     public function responsiveImage($event) {
+        //todo $event-System erklären
         $image = $event->object;
         $options = $event['arguments'][0];
 
         $attributes = $this->createAttributeString($event['arguments'][1]);
+        //todo beispiele für argumente geben
 
         if ($this->isModuleEnabled()) {
             $srcset = $this->createSrcset($image, $options);
@@ -62,27 +71,38 @@ class  ResponsiveImage extends WireData implements Module {
         $event->return = $return;
     }
 
+    /**
+     * Hintergrundbilder
+     *
+     * Hier werden durchnummerierte CSS-Klassen erstellt, gesammelt und einzeln zurückgegeben.
+     * Diese werden später zusammen durch getResponsiveCSS() ausgegeben und mit Eigenschaften versehen.
+     *
+     * @param $event
+     */
     public function responsiveBackground($event){
         $image = $event->object;
         $options = $event['arguments'][0];
 
         $return = 'background-image-'. $this->backgroundImageCounter;
 
-        $this->backgroundImages[$this->backgroundImageCounter] = $image;
-        $this->backgroundImages[$this->backgroundImageCounter]['options'] = $options;
-        $this->backgroundImages[$this->backgroundImageCounter]['keyCSS'] = $this->backgroundImageCounter;
+        $this->backgroundImageArray[$this->backgroundImageCounter] = $image;
+        $this->backgroundImageArray[$this->backgroundImageCounter]['options'] = $options;
+        $this->backgroundImageArray[$this->backgroundImageCounter]['keyCSS'] = $this->backgroundImageCounter;
 
         $this->backgroundImageCounter++;
 
         $event->return = $return;
     }
 
+    /**
+     * @param $event
+     */
     public function getResponsiveCSS($event){
         $return = '';
 
         if ($this->backgroundImageCounter > 0 ) {
             $return .= "\n".'<style type="text/css">'."\n";
-            foreach ($this->backgroundImages as $key => $image) {
+            foreach ($this->backgroundImageArray as $key => $image) {
                 $return .= 'div.background-image-'. $key .' { background-image: url('. $image->url .'); }'."\n";
                 if ($this->isModuleEnabled()) {
                     $return .= $this->createMediaQueries($image);
@@ -97,7 +117,7 @@ class  ResponsiveImage extends WireData implements Module {
     private function createSrcset($image, $options){
         $return = self::$defaultSizeArray;
         $baseImage = $image;
-        $resizeOptions = array('quality'=>self::$resizeQuality);
+        $resizeOptions = array('quality'=>self::$defaultResizeQuality);
 
         foreach ($return as $key => $value) {
             if ( isset($options[$key]) && is_numeric($options[$key])) {
@@ -123,7 +143,7 @@ class  ResponsiveImage extends WireData implements Module {
     private function createMediaQueries($image){
         $return = self::$defaultSizeArray;
         $baseImage = $image;
-        $resizeOptions = array('quality'=>self::$resizeQuality);
+        $resizeOptions = array('quality'=>self::$defaultResizeQuality);
         $options = $image['options'];
         $keyCSS = $image['keyCSS'];
 
@@ -163,14 +183,23 @@ class  ResponsiveImage extends WireData implements Module {
         return implode(" ", $attributes);
     }
 
+    /**
+     *
+     */
     public static function disable(){
         self::$useModule = false;
     }
 
+    /**
+     *
+     */
     public static function enable(){
         self::$useModule = true;
     }
 
+    /**
+     * @return bool
+     */
     public static function isModuleEnabled(){
         return self::$useModule;
     }
