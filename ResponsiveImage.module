@@ -19,7 +19,7 @@ class ResponsiveImage extends WireData implements Module {
     private $backgroundImageCounter = 0;
     private $backgroundImageArray = array();
     private static $useModule = true;
-    private static $defaultResizeQuality = 90;
+    private static $defaultResizeQuality = 85;
     private static $defaultSizeArray = array(
         'xl' => 1920,
         'lg' => 1600,
@@ -122,7 +122,7 @@ class ResponsiveImage extends WireData implements Module {
         foreach ($return as $key => $value) {
             if ( isset($options[$key]) && is_numeric($options[$key])) {
                 if ($options[$value]<$baseImage) {
-                    $i = $image->size($options[$key], 0, $resizeOptions);
+                    $i = $image->size($options[$key], $value, $resizeOptions);
                     $return[$key] = $i->url . ' ' . $i->width . 'w';
                 } else {
                     $return[$key] = $baseImage->url . ' ' . $baseImage->width . 'w';
@@ -130,7 +130,7 @@ class ResponsiveImage extends WireData implements Module {
             } elseif (isset($options[$key]) && $options[$key] == false) {
                 //todo: bilder komplett ausblenden bei false
             } elseif ( !isset($options[$key]) ) {
-                $i = $image->size($options[$key], 0, $resizeOptions);
+                $i = $image->size($options[$key], $value, $resizeOptions);
                 $return[$key] = $i->url . ' ' . $i->width . 'w';
             } elseif ( isset($options[$key]) && is_object($options[$key])) {
                 $baseImage = $options[$key];
@@ -150,7 +150,7 @@ class ResponsiveImage extends WireData implements Module {
         foreach ($return as $key => $value) {
             if ( isset($options[$key]) && is_numeric($options[$key])) {
                 if ($options[$value]<$baseImage) {
-                    $i = $image->size($options[$key], 0, $resizeOptions);
+                    $i = $image->size($options[$key], $value, $resizeOptions);
                     //$return[$key] = $i->url . ' ' . $i->width . 'w';
                     $return[$key] = $this->createMediaQueryString($keyCSS, $i->width, $i->url);
                 } else {
